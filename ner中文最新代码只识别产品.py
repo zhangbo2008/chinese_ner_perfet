@@ -24,7 +24,7 @@ The following values are also annotated in a style similar to names:
 #从例子看text是不能之间加空格的!!!!!!!!!!!!!!所以我们还需要在dataloader里面进行训练数据的转化.
 
 '''
-#超参数写在最上面.
+#超参数写在最上面.#===================进行训练.训练集都是产品的.
 n_epoch = 40
 cold = 10
 cold_lr = 3e-4
@@ -36,7 +36,7 @@ tag_dic = {"时间": "shijian",#==========time,data
            "单位": "danwei", #============org
            "物资": "wuzi", # PRODUCT
            "数量": "shuliang", # CARDINAL
-           "量词": "liangci", #正则
+           "量词": "liangci", #CARDINAL+正则 因为量词一定在cardinal的后面.
            "电话": "dianhua", # 正则
            "经纬度": "jingweidu", #正则
            }

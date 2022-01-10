@@ -24,8 +24,8 @@ The following values are also annotated in a style similar to names:
 #从例子看text是不能之间加空格的!!!!!!!!!!!!!!所以我们还需要在dataloader里面进行训练数据的转化.
 
 '''
-#超参数写在最上面.
-n_epoch = 40
+#超参数写在最上面.#========================识别地址我们不尽兴训练.
+n_epoch = 0
 cold = 10
 cold_lr = 3e-4
 lr = 3e-5
