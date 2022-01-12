@@ -276,7 +276,7 @@ id2label= {
     "71": "S-TIME",
     "72": "S-WORK_OF_ART"
   }
-print(1)
+# print(1)
 id2label2={}
 for i in id2label:
 
@@ -403,7 +403,7 @@ def mycollate_fn(data):
 # 把model2 拼接到model上.
 
 
-print(1111)
+# print(1111)
 
 
 

@@ -10,9 +10,11 @@ from kmp_for_array import kmp
 
 class DealDataset(Dataset):
 
-    def __init__(self,a,b,model_name,label2id):
+    def __init__(self,a,b,model_name,label2id,tokenizer=None):
         self.label2id=label2id
-        self.tokenizer = BertTokenizer.from_pretrained(model_name)
+        self.tokenizer=tokenizer
+        # if not tokenizer:#如果没传入就按照modelname来配置.
+        #     self.tokenizer = BertTokenizer.from_pretrained(model_name)
         self.input_data = a
         self.tag = b
         self.count = -1  # 这个行代码是为了防止读取空白文件,时候bug.
@@ -31,6 +33,7 @@ class DealDataset(Dataset):
 
         '''
         text = linecache.getline(self.input_data, index + 1).strip()
+        print("debuggging",text)
         tag = linecache.getline(self.tag, index + 1).strip()
         tag=tag.split(' ')
         tag_origin=tag
@@ -45,13 +48,35 @@ class DealDataset(Dataset):
         text=text.replace(' ','')
 
         encoding = self.tokenizer( text, return_tensors='pt')['input_ids'][0]
+
+        #================处理unk问题:出现这个问题都是因为有一个字符是字典里面没有的所以替换即可
+
+
+
+
+
+
         tag=[0]+tag+[0]  # 头尾加上O
         out=tag    # 0 表示other
 #从hf抄的函数.
         # Tokenize all texts and align the labels with them.
 #=================修改成bie关于token的. 注意是bie.不是bi.   有点麻烦.
+        encoding=encoding.tolist()
+        encoding=[0 if i == 100 else i for i in encoding]
 
-        tmp = self.tokenizer.convert_ids_to_tokens(encoding.tolist())
+        #100 都替换成0
+
+
+
+
+
+
+
+
+
+
+
+        tmp = self.tokenizer.convert_ids_to_tokens(encoding)
         tag_origin
         tag_after_process=[]
         print(1)
@@ -69,11 +94,17 @@ class DealDataset(Dataset):
 
         cnt=0
         for i in tmp[1:-1]:
-            kkk=i.replace('#','')#==============注意去掉前缀.
-            tmp2=tag_origin[cnt:cnt+len(kkk)]#这个就是手机的.
-            cnt+=len(kkk)
-            print(1)
-            tag_after_process.append(fix(tmp2))
+            if i=='[PAD]':
+
+                tmp2 = tag_origin[cnt:cnt + (1)]  # 这个就是手机的.
+                cnt+=1
+                tag_after_process.append(fix(tmp2))
+            else:
+                kkk=i.replace('#','')#==============注意去掉前缀.
+                tmp2=tag_origin[cnt:cnt+len(kkk)]#这个就是手机的.
+                cnt+=len(kkk)
+                print(1)
+                tag_after_process.append(fix(tmp2))
         tag=tag_after_process
         if 1:
             print('lookfor token',list(zip(tmp[1:-1],tag_after_process)))

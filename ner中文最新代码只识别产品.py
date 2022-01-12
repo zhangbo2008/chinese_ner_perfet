@@ -276,7 +276,7 @@ id2label= {
     "71": "S-TIME",
     "72": "S-WORK_OF_ART"
   }
-print(1)
+# print(1)
 id2label2={}
 for i in id2label:
 
@@ -286,7 +286,7 @@ for i in id2label:
 label2id={}
 for i in id2label2:
     label2id[id2label2[i]]=i
-print(1)
+# print(1)
 
 from transformers import AlbertTokenizer, AlbertForTokenClassification
 import torch
@@ -414,6 +414,93 @@ from torch.utils.data import DataLoader, TensorDataset
 
 
 
+#=============================先进行切割数据集为test和train
+#=================先需要对字典进行扩充,因为数据里面有很多怪异字符:
+tokenizer.add_tokens(['—','…','铱','―','-']) #只能写一行,写一次.
+
+
+tokenizer('据 悉 ， 更 加 先 进 的 f d - 7 2 1 2 e 导 弹 实 施 有 效 跟 踪 ， 将 于 2 0 1 0 年 左 右 装 备 部 队 ， 逐 步 替 换 现 有 的 j ／ f p s ― 3 雷铱')
+model.resize_token_embeddings(len(tokenizer))
+
+with open('data/product_data.txt',encoding='utf-8') as f:
+    a=f.readlines()
+    # text=text.replace("“","\"")
+    #
+    # text=text.replace("”","\"")
+    # text=text.replace("‘","\'")
+    # text=text.replace("’","\'")
+
+
+    a=[i.lower().replace("“","\"").replace("”","\"").replace("‘","\'").replace("’","\'") for i in a if i]
+with open('data/product_label.txt',encoding='utf-8') as f:
+    b=f.readlines()
+    b=[i for i in b if i]
+print(11111111111111111)
+#===========切分后写入test和train
+with open('data/train1.txt',mode='w',encoding='utf-8') as f:
+    f.writelines(a[:int(len(a)*0.75)])
+
+with open('data/test1.txt',mode='w',encoding='utf-8') as f:
+    f.writelines(a[int(len(a)*0.75):])
+
+with open('data/train2.txt',mode='w',encoding='utf-8') as f:
+    f.writelines(b[:int(len(a)*0.75)])
+
+with open('data/test2.txt',mode='w',encoding='utf-8') as f:
+    f.writelines(b[int(len(a)*0.75):])
+
+
+
+
+
+
+
+from DealDataset import DealDataset
+if 1:
+    print('test_before_train')
+
+    # 开启finetune模式 ,,,,,,,C:\Users\Administrator\.PyCharm2019.3\system\remote_sources\-456540730\-337502517\transformers\data\processors\squad.py 从这个里面进行抄代码即可.
+#================================!!!!!!!!!!!!!!!!!!!!!!!1数据说名 ner1里面是字符串.每个字符中间必须加空格.否则编码会混乱
+    #ner2里面是tag,也必须加空格!!!!!!!!!!!!!!!!!!1
+    batch_size=8
+    a='data/test1.txt'
+    b='data/test2.txt'
+    dealDataset = DealDataset(a,b,model_name,label2id,tokenizer) #这个
+    train_loader = DataLoader(dataset=dealDataset,
+                              batch_size=batch_size,
+                              shuffle=True,
+                              pin_memory=True,
+                              collate_fn=mycollate_fn)
+
+
+    model.eval()
+    all_cnt=0
+    correct_cnt=0
+    for input_ids_batch, attention_mask_batch, out in train_loader:
+        inputs = {
+            "input_ids": input_ids_batch.to(device),
+            "attention_mask": attention_mask_batch.to(device),
+            "labels": out.to(device),
+
+        }
+        outputs = model(**inputs)
+        # print('输出outputs对应的概率', outputs[0])
+        a = outputs.logits.argmax(dim=-1)
+#计算out和a的区别即可.
+        all_cnt+=out.numel()
+        correct_cnt+=(a==out).sum()
+    print('准确率',correct_cnt/all_cnt)
+
+
+
+
+
+
+
+
+
+
+
 
 
 from DealDataset import DealDataset
@@ -424,8 +511,8 @@ if 1:
 #================================!!!!!!!!!!!!!!!!!!!!!!!1数据说名 ner1里面是字符串.每个字符中间必须加空格.否则编码会混乱
     #ner2里面是tag,也必须加空格!!!!!!!!!!!!!!!!!!1
     batch_size=4
-    a='data/ner1.txt'
-    b='data/ner2.txt'
+    a='data/train1.txt'
+    b='data/train2.txt'
     dealDataset = DealDataset(a,b,model_name,label2id)
     train_loader = DataLoader(dataset=dealDataset,
                               batch_size=batch_size,
@@ -493,7 +580,59 @@ if 0:
         print('ground_true', inputs['labels'])
 print('train_over')
         #对于最后一轮直接做测试:
+
+
+
+from DealDataset import DealDataset
 if 1:
+    print('test_after_train')
+
+    # 开启finetune模式 ,,,,,,,C:\Users\Administrator\.PyCharm2019.3\system\remote_sources\-456540730\-337502517\transformers\data\processors\squad.py 从这个里面进行抄代码即可.
+#================================!!!!!!!!!!!!!!!!!!!!!!!1数据说名 ner1里面是字符串.每个字符中间必须加空格.否则编码会混乱
+    #ner2里面是tag,也必须加空格!!!!!!!!!!!!!!!!!!1
+    batch_size=8
+    a='data/test1.txt'
+    b='data/test2.txt'
+    dealDataset = DealDataset(a,b,model_name,label2id,tokenizer) #这个
+    train_loader = DataLoader(dataset=dealDataset,
+                              batch_size=batch_size,
+                              shuffle=True,
+                              pin_memory=True,
+                              collate_fn=mycollate_fn)
+
+
+    model.eval()
+    all_cnt=0
+    correct_cnt=0
+    for input_ids_batch, attention_mask_batch, out in train_loader:
+        inputs = {
+            "input_ids": input_ids_batch.to(device),
+            "attention_mask": attention_mask_batch.to(device),
+            "labels": out.to(device),
+
+        }
+        outputs = model(**inputs)
+        # print('输出outputs对应的概率', outputs[0])
+        a = outputs.logits.argmax(dim=-1)
+#计算out和a的区别即可.
+        all_cnt+=out.numel()
+        correct_cnt+=(a==out).sum()
+    print('准确率',correct_cnt/all_cnt)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if 0:
 
 
 
