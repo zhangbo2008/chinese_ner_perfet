@@ -33,7 +33,7 @@ class DealDataset(Dataset):
 
         '''
         text = linecache.getline(self.input_data, index + 1).strip()
-        print("debuggging",text)
+        # print("debuggging",text)
         tag = linecache.getline(self.tag, index + 1).strip()
         tag=tag.split(' ')
         tag_origin=tag
@@ -79,7 +79,7 @@ class DealDataset(Dataset):
         tmp = self.tokenizer.convert_ids_to_tokens(encoding)
         tag_origin
         tag_after_process=[]
-        print(1)
+        # print(1)
         #===============先写算法逻辑,手机每一个token对应之前的索引.然后找到这些索引对应的token.再整合这些token即可.
         def fix(tmp2):
 
@@ -103,10 +103,10 @@ class DealDataset(Dataset):
                 kkk=i.replace('#','')#==============注意去掉前缀.
                 tmp2=tag_origin[cnt:cnt+len(kkk)]#这个就是手机的.
                 cnt+=len(kkk)
-                print(1)
+                # print(1)
                 tag_after_process.append(fix(tmp2))
         tag=tag_after_process
-        if 1:
+        if 0:
             print('lookfor token',list(zip(tmp[1:-1],tag_after_process)))
 
 

@@ -29,7 +29,7 @@ n_epoch = 40
 cold = 10
 cold_lr = 3e-4
 lr = 3e-5
-
+batch_size=4
 #===============我们要添加的分类.
 tag_dic = {"时间": "shijian",#==========time,data
            "地址": "dizhi", #=================org
@@ -462,7 +462,7 @@ if 1:
     # 开启finetune模式 ,,,,,,,C:\Users\Administrator\.PyCharm2019.3\system\remote_sources\-456540730\-337502517\transformers\data\processors\squad.py 从这个里面进行抄代码即可.
 #================================!!!!!!!!!!!!!!!!!!!!!!!1数据说名 ner1里面是字符串.每个字符中间必须加空格.否则编码会混乱
     #ner2里面是tag,也必须加空格!!!!!!!!!!!!!!!!!!1
-    batch_size=8
+
     a='data/test1.txt'
     b='data/test2.txt'
     dealDataset = DealDataset(a,b,model_name,label2id,tokenizer) #这个
@@ -488,8 +488,11 @@ if 1:
         a = outputs.logits.argmax(dim=-1)
 #计算out和a的区别即可.
         all_cnt+=out.numel()
+        a=a.to('cpu')
+        out=out.to('cpu')
         correct_cnt+=(a==out).sum()
     print('准确率',correct_cnt/all_cnt)
+    torch.save(model, 'tmp.pth')
 
 
 
@@ -510,10 +513,10 @@ if 1:
     # 开启finetune模式 ,,,,,,,C:\Users\Administrator\.PyCharm2019.3\system\remote_sources\-456540730\-337502517\transformers\data\processors\squad.py 从这个里面进行抄代码即可.
 #================================!!!!!!!!!!!!!!!!!!!!!!!1数据说名 ner1里面是字符串.每个字符中间必须加空格.否则编码会混乱
     #ner2里面是tag,也必须加空格!!!!!!!!!!!!!!!!!!1
-    batch_size=4
+
     a='data/train1.txt'
     b='data/train2.txt'
-    dealDataset = DealDataset(a,b,model_name,label2id)
+    dealDataset = DealDataset(a,b,model_name,label2id,tokenizer)
     train_loader = DataLoader(dataset=dealDataset,
                               batch_size=batch_size,
                               shuffle=True,
@@ -541,9 +544,11 @@ if 1:
                 param_group['lr'] = lr
             for param in model.base_model.parameters():
                 param.requires_grad = True
-        print('当前epoch学习率',optimizer.param_groups[0]['lr'])
+        print('当前epoch学习率',i,optimizer.param_groups[0]['lr'])
         #for input_ids,attention_mask,start,end in train_loader:
+        cnt=0
         for  input_ids_batch,attention_mask_batch,out in train_loader:
+            cnt+=1
             inputs = {
                 "input_ids": input_ids_batch.to(device),
                 "attention_mask": attention_mask_batch.to(device),
@@ -554,7 +559,9 @@ if 1:
             loss = outputs[0]
             ####多gpu时返回多个loss，需要取均值
             loss=loss.mean()
-            print(loss,"当前loss")
+            if cnt%500==0: #=======降低打印频率
+
+                print(loss,"当前loss")
             loss.backward(loss.clone().detach())
             #loss.backward()
             optimizer.step()
@@ -590,7 +597,7 @@ if 1:
     # 开启finetune模式 ,,,,,,,C:\Users\Administrator\.PyCharm2019.3\system\remote_sources\-456540730\-337502517\transformers\data\processors\squad.py 从这个里面进行抄代码即可.
 #================================!!!!!!!!!!!!!!!!!!!!!!!1数据说名 ner1里面是字符串.每个字符中间必须加空格.否则编码会混乱
     #ner2里面是tag,也必须加空格!!!!!!!!!!!!!!!!!!1
-    batch_size=8
+
     a='data/test1.txt'
     b='data/test2.txt'
     dealDataset = DealDataset(a,b,model_name,label2id,tokenizer) #这个
@@ -616,8 +623,11 @@ if 1:
         a = outputs.logits.argmax(dim=-1)
 #计算out和a的区别即可.
         all_cnt+=out.numel()
-        correct_cnt+=(a==out).sum()
-    print('准确率',correct_cnt/all_cnt)
+        a = a.to('cpu')
+        out = out.to('cpu')
+        correct_cnt += (a == out).sum()
+    print('准确率', correct_cnt / all_cnt)
+torch.save(model,'tmp.pth')
 
 
 
